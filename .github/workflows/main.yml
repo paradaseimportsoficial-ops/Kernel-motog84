@@ -34,4 +34,10 @@ jobs:
           make O=out mrproper || true
           make O=out defconfig || true
           make O=out -j$(nproc) || true
+
+      - name: Upload Kernel Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: kernel-moto-g84
+          path: out/arch/arm64/boot/Image*
           
