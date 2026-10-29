@@ -36,7 +36,7 @@ jobs:
           make O=out -j$(nproc) || true
 
       - name: Upload Kernel Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: kernel-moto-g84
           path: out/arch/arm64/boot/Image*
