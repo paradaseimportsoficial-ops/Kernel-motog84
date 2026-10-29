@@ -19,16 +19,13 @@ jobs:
 
       - name: Set up Toolchain
         run: |
-          mkdir -p clang
-          curl -L https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/androidx-main/clang-r416183b.tar.gz -o clang.tar.gz
-          tar -xzf clang.tar.gz -C clang
-          rm clang.tar.gz
+          git clone --depth=1 https://github.com/kdrag0n/aarch64-elf-gcc.git -b master clang
 
       - name: Compile the kernel
         run: |
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          export CC=$GITHUB_WORKSPACE/clang/bin/clang
+          export CC=$GITHUB_WORKSPACE/clang/bin/aarch64-elf-
           make O=out mrproper
           make O=out vendor/genfs_defconfig
           make O=out -j$(nproc)
