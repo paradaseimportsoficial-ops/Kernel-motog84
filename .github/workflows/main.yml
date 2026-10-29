@@ -21,13 +21,18 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/aarch64-elf-gcc.git clang
 
+      - name: Clone Kernel Source
+        run: |
+          git clone --depth=1 https://github.com/MotorolaMobilityLLC/kernel-msm-lahaina.git -b android-13-moto kernel_src
+
       - name: Compile the kernel
         run: |
           export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
           export ARCH=arm64
           export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-elf-
+          cd kernel_src
           make mrproper
-          make defconfig
+          make vendor/genfs_defconfig
           make -j$(nproc)
           
