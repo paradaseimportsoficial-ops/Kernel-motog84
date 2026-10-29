@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Install dependencies
@@ -21,12 +21,17 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/aarch64-elf-gcc.git clang
 
+      - name: Clone Kernel Source
+        run: |
+          git clone --depth=1 https://github.com/motorola/kernel-msm-lahaina.git -b android-13 kernel_src
+
       - name: Compile the kernel
         run: |
           export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
           export ARCH=arm64
           export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-elf-
+          cd kernel_src
           make mrproper
           make defconfig
           make -j$(nproc)
