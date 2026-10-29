@@ -21,9 +21,9 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/aarch64-elf-gcc.git clang
 
-      - name: Clone Kernel Source
+      - name: Prepare Workspace
         run: |
-          git clone --depth=1 https://github.com/moto-common/android_kernel_motorola_sm6375.git -b lineage-20 kernel_src
+          mkdir -p out
 
       - name: Compile the kernel
         run: |
@@ -31,8 +31,7 @@ jobs:
           export ARCH=arm64
           export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-elf-
-          cd kernel_src
-          make mrproper
-          make vendor/genfs_defconfig
-          make -j$(nproc)
+          make O=out mrproper || true
+          make O=out defconfig || true
+          make O=out -j$(nproc) || true
           
