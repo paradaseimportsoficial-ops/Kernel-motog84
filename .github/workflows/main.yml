@@ -19,7 +19,7 @@ jobs:
 
       - name: Set up Toolchain
         run: |
-          git clone --depth=1 https://github.com/kdrag0n/aarch64-elf-gcc.git -b main clang
+          git clone --depth=1 https://github.com/kdrag0n/aarch64-elf-gcc.git clang
 
       - name: Compile the kernel
         run: |
