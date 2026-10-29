@@ -19,7 +19,10 @@ jobs:
 
       - name: Set up Toolchain
         run: |
-          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_host_linux-x86_clang-r416183b.git clang
+          mkdir -p clang
+          curl -L https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/androidx-main/clang-r416183b.tar.gz -o clang.tar.gz
+          tar -xzf clang.tar.gz -C clang
+          rm clang.tar.gz
 
       - name: Compile the kernel
         run: |
