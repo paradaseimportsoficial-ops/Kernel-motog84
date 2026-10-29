@@ -32,12 +32,15 @@ jobs:
           export SUBARCH=arm64
           export CROSS_COMPILE=aarch64-elf-
           make O=out mrproper || true
-          make O=out defconfig || true
-          make O=out -j$(nproc) || true
+          make O=out arm64_defconfig
+          make O=out -j$(nproc)
 
       - name: Upload Kernel Artifact
         uses: actions/upload-artifact@v4
         with:
           name: kernel-moto-g84
-          path: out/arch/arm64/boot/Image*
-          
+          path: |
+            out/arch/arm64/boot/Image
+            out/arch/arm64/boot/Image.gz
+            out/arch/arm64/boot/Image.gz-dtb
+            
