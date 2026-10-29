@@ -1,0 +1,32 @@
+name: Build Kernel
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential bc bison flex libssl-dev libelf-dev curl zip ccache
+
+      - name: Set up Toolchain
+        run: |
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_host_linux-x86_clang-r416183b clang
+
+      - name: Compile the kernel
+        run: |
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CC=$GITHUB_WORKSPACE/clang/bin/clang
+          make O=out mrproper
+          make O=out vendor/genfs_defconfig
+          make O=out -j$(nproc)
+          
