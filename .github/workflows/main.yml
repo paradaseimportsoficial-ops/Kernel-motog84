@@ -19,7 +19,7 @@ jobs:
 
       - name: Set up Toolchain
         run: |
-          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_host_linux-x86_clang-r416183b clang
+          git clone --depth=1 https://github.com/LineageOS/android_prebuilts_clang_host_linux-x86_clang-r416183b.git clang
 
       - name: Compile the kernel
         run: |
