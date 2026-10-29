@@ -21,12 +21,9 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kdrag0n/aarch64-elf-gcc.git clang
 
-      - name: Download Kernel Source
+      - name: Clone Kernel Source
         run: |
-          curl -L https://github.com/MotorolaMobilityLLC/kernel-msm-lahaina/archive/refs/heads/android-13-moto.tar.gz -o kernel.tar.gz
-          mkdir kernel_src
-          tar -xzf kernel.tar.gz -C kernel_src --strip-components=1
-          rm kernel.tar.gz
+          git clone --depth=1 https://github.com/moto-common/android_kernel_motorola_sm6375.git -b lineage-20 kernel_src
 
       - name: Compile the kernel
         run: |
