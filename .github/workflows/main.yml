@@ -23,10 +23,11 @@ jobs:
 
       - name: Compile the kernel
         run: |
+          export PATH="$GITHUB_WORKSPACE/clang/bin:$PATH"
           export ARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          export CC=$GITHUB_WORKSPACE/clang/bin/aarch64-elf-
-          make O=out mrproper
-          make O=out vendor/genfs_defconfig
-          make O=out -j$(nproc)
+          export SUBARCH=arm64
+          export CROSS_COMPILE=aarch64-elf-
+          make mrproper
+          make defconfig
+          make -j$(nproc)
           
