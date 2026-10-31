@@ -1,0 +1,8 @@
+*.img
+*.win
+*.zip
+*.deb
+__pycache__/
+AnyKernel3/
+dist/
+private/

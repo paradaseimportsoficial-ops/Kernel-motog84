@@ -1,0 +1,30 @@
+Moto G84 5G (bangkk) — 5.4.295-Tecnico-Root-V1
+
+ZIP para instalar pelo TWRP. Nao e uma atualizacao ou recompilacao do Linux.
+Altera apenas o campo UTS release (nome mostrado por uname e configuracoes).
+Preserva a identificacao usada pelos modulos e o banner estatico original.
+Por isso algumas ferramentas ainda podem mostrar o nome antigo.
+
+Se o ZIP contem Image, usa o kernel da imagem fornecida pelo usuario, com o
+nome alterado. Esse ZIP e pessoal: o kernel contem o patch APatch existente.
+Sem Image, renomeia apenas o kernel ja instalado, sem conter dados de root.
+
+Exige Moto G84, slot A/B reconhecido, nome original
+5.4.295-moto-17290-g91c2dab5855a e armazenamento /sdcard gravavel no TWRP.
+A instalacao altera o boot do slot ativo e preserva todos os bytes fora do
+kernel. Exige bootloader desbloqueado; nao recalcula nem remove AVB.
+O ZIP com Image recusa instalacao se o tamanho do kernel instalado diferir.
+Nao altera vendor_boot, vbmeta, dados ou os modulos instalados.
+
+1. Tenha uma forma funcional de voltar ao TWRP e uma copia do boot compativel.
+2. No TWRP, desbloqueie/monte o armazenamento interno.
+3. Install > selecione este ZIP > confirme a instalacao.
+4. Confira a mensagem de sucesso antes de reiniciar.
+
+O instalador faz backup do boot anterior em:
+/sdcard/TecnicoRoot-backup/<data-hora>/boot_a-antes.img (ou boot_b).
+Para desfazer, no TWRP selecione Install Image, o backup e a particao Boot
+do MESMO slot registrado no nome do arquivo. Nao selecione outra particao.
+Se a verificacao de gravacao falhar, restaure o backup antes de reiniciar.
+
+Validacao em computador nao substitui teste de inicializacao no aparelho.

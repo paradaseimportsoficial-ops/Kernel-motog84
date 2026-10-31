@@ -1,163 +1,37 @@
-name: Build Kernel Moto G84
-
-# The current kernel source and toolchain must be supplied explicitly.
-# Do not substitute a generic defconfig or a different device's kernel.
+name: ZIP TWRP - Tecnico Root V1
 on:
   workflow_dispatch:
-    inputs:
-      source_repository:
-        description: 'Fonte do kernel atual (dono/repositorio), incluindo o root existente'
-        required: true
-        type: string
-      source_ref:
-        description: 'Branch, tag ou SHA da fonte compatível com sua ROM'
-        required: true
-        type: string
-      defconfig:
-        description: 'Configuração em arch/arm64/configs (ex.: vendor/nome_defconfig)'
-        required: true
-        type: string
-      toolchain_repository:
-        description: 'Repositório do Clang exigido pela fonte (dono/repositorio; bin/clang)'
-        required: true
-        type: string
-      toolchain_ref:
-        description: 'Branch, tag ou SHA do toolchain'
-        required: true
-        type: string
-      image_target:
-        description: 'Formato de imagem exigido pela fonte'
-        required: true
-        default: Image.gz
-        type: choice
-        options:
-          - Image
-          - Image.gz
-          - Image.gz-dtb
-      localversion:
-        description: 'Sufixo opcional; vazio preserva a configuração da fonte'
-        required: false
-        default: ''
-        type: string
-
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 permissions:
   contents: read
-
 jobs:
-  build:
+  package:
     runs-on: ubuntu-22.04
-    timeout-minutes: 180
-    defaults:
-      run:
-        shell: bash
-    env:
-      ARCH: arm64
-      SUBARCH: arm64
-      CROSS_COMPILE: aarch64-linux-gnu-
-      CROSS_COMPILE_ARM32: arm-linux-gnueabi-
-      CROSS_COMPILE_COMPAT: arm-linux-gnueabi-
-      DEFCONFIG: ${{ inputs.defconfig }}
-      IMAGE_TARGET: ${{ inputs.image_target }}
-      LOCALVERSION_SUFFIX: ${{ inputs.localversion }}
+    timeout-minutes: 15
     steps:
-      - name: Checkout build repository
-        uses: actions/checkout@v4
-
-      - name: Checkout kernel source
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ inputs.source_repository }}
-          ref: ${{ inputs.source_ref }}
-          path: kernel_src
-          fetch-depth: 1
-          submodules: recursive
-          persist-credentials: false
-
-      - name: Checkout Clang toolchain
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ inputs.toolchain_repository }}
-          ref: ${{ inputs.toolchain_ref }}
-          path: toolchain
-          persist-credentials: false
-
-      - name: Install dependencies
+      - uses: actions/checkout@v4
+      - name: Testar alteracao limitada ao nome
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential bc bison flex libssl-dev libelf-dev \
-            libncurses-dev libncurses5 python3 perl cpio rsync git lz4 zstd \
-            gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu \
-            gcc-arm-linux-gnueabi binutils-arm-linux-gnueabi
-
-      - name: Validate source and toolchain
+          python3 -m unittest discover -s tests -v
+          bash -n installer/anykernel.sh
+      - name: Baixar instalador AnyKernel3 fixado
         run: |
-          mkdir -p logs
-          test -f kernel_src/Makefile
-          if [[ ! "$DEFCONFIG" =~ ^[A-Za-z0-9_/-]+$ || "$DEFCONFIG" == *..* ]]; then
-            echo "::error::Caminho de defconfig inválido."
-            exit 1
-          fi
-          test -f "kernel_src/arch/arm64/configs/$DEFCONFIG" || {
-            echo "::error::Defconfig ausente na fonte. Não será usado um defconfig genérico."
-            exit 1
-          }
-          case "$IMAGE_TARGET" in
-            Image|Image.gz|Image.gz-dtb) ;;
-            *) echo "::error::Formato de imagem inválido."; exit 1 ;;
-          esac
-          test -x toolchain/bin/clang
-          echo "$GITHUB_WORKSPACE/toolchain/bin" >> "$GITHUB_PATH"
-          {
-            echo "Source commit: $(git -C kernel_src rev-parse HEAD)"
-            echo "Toolchain commit: $(git -C toolchain rev-parse HEAD)"
-            echo "Defconfig: $DEFCONFIG"
-            echo "Image target: $IMAGE_TARGET"
-            toolchain/bin/clang --version
-          } | tee logs/build-info.txt
-
-      - name: Configure kernel
-        working-directory: kernel_src
+          git init AnyKernel3
+          git -C AnyKernel3 remote add origin https://github.com/osm0sis/AnyKernel3.git
+          git -C AnyKernel3 fetch --depth=1 origin 41f04bdb4ee30a44e429c2c1131d5e8bb32b15f1
+          git -C AnyKernel3 checkout --detach FETCH_HEAD
+          test "$(git -C AnyKernel3 rev-parse HEAD)" = 41f04bdb4ee30a44e429c2c1131d5e8bb32b15f1
+      - name: Gerar ZIP sem imagem ou credenciais pessoais
         run: |
-          make O=out CC=clang "$DEFCONFIG" 2>&1 | tee ../logs/configure.log
-          if [[ -n "$LOCALVERSION_SUFFIX" ]]; then
-            scripts/config --file out/.config --set-str LOCALVERSION "$LOCALVERSION_SUFFIX"
-          fi
-          make O=out CC=clang olddefconfig 2>&1 | tee -a ../logs/configure.log
-
-      - name: Compile kernel
-        working-directory: kernel_src
-        run: |
-          make -j"$(nproc)" O=out CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm \
-            OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip \
-            "$IMAGE_TARGET" 2>&1 | tee ../logs/build.log
-          test -s "out/arch/arm64/boot/$IMAGE_TARGET"
-
-      - name: Prepare kernel artifact
-        run: |
-          mkdir -p artifact
-          cp "kernel_src/out/arch/arm64/boot/$IMAGE_TARGET" artifact/
-          cp kernel_src/out/.config artifact/kernel.config
-          cp logs/build-info.txt artifact/
-          printf '%s\n' \
-            'Imagem de kernel apenas; não é um ZIP instalável nem um boot.img.' \
-            'Root depende da integração presente na fonte fornecida.' \
-            'Compilar com sucesso não comprova compatibilidade com a ROM/aparelho.' \
-            > artifact/LEIA-ME.txt
-          (cd artifact && sha256sum "$IMAGE_TARGET" > SHA256SUMS)
-
-      - name: Upload kernel artifact
+          python3 scripts/build_zip.py --anykernel AnyKernel3 --output dist/MotoG84-Tecnico-Root-V1-renomeador-TWRP.zip
+          cd dist
+          sha256sum *.zip > SHA256SUMS
+      - name: Publicar ZIP instalavel e checksum
         uses: actions/upload-artifact@v4
         with:
-          name: kernel-moto-g84-${{ github.run_number }}
-          path: artifact/
+          name: MotoG84-Tecnico-Root-V1-TWRP
+          path: dist/
           if-no-files-found: error
-
-      - name: Upload diagnostic logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: kernel-build-logs-${{ github.run_number }}
-          path: |
-            logs/
-            kernel_src/out/.config
-          if-no-files-found: warn
